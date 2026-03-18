@@ -27,7 +27,7 @@ const nidSchema = z.object({
   nidNumber: z
     .string()
     .min(1, "NID Number is required")
-    .regex(/^\d{17}$/, "NID Number must be exactly 17 digits"),
+    .regex(/^\d{10}$/, "NID Number must be exactly 10 digits"),
   dateOfBirth: z.string().min(1, "Date of Birth is required"),
   verificationModel: z.enum(["fingerprint", "face_matching"], {
     message: "Please select a verification model",
@@ -95,8 +95,8 @@ export function Step1NID({ onNext, defaultValues }: Step1NIDProps) {
             </Label>
             <Input
               id="nidNumber"
-              placeholder="Enter 17-digit NID number"
-              maxLength={17}
+              placeholder="Enter 10-digit NID number"
+              maxLength={10}
               {...register("nidNumber")}
             />
             {errors.nidNumber && (

@@ -349,7 +349,7 @@ export default function CustomerDetailPage({
   return (
     <div className="space-y-6">
       {/* Back button */}
-      <Button variant="ghost" size="sm" render={<Link href="/customers" />} className="gap-1.5">
+      <Button nativeButton={false} variant="ghost" size="sm" render={<Link href="/customers" />} className="gap-1.5">
         <ArrowLeft className="size-4" />
         Back to Customers
       </Button>

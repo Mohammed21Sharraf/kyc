@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
-import type { Customer, DashboardStats, RiskLevel } from '@/types/database'
+import type { Customer, DashboardStats } from '@/types/database'
 
 const supabase = createClient()
 
@@ -23,11 +23,11 @@ async function fetchDashboardStats(): Promise<DashboardStats> {
         .from('customers')
         .select('id', { count: 'exact', head: true })
         .not('onboarding_status', 'eq', 'completed')
-        .not('onboarding_status', 'eq', 'rejected'),
+        .not('onboarding_status', 'eq', 'failed'),
       supabase
         .from('customers')
         .select('id', { count: 'exact', head: true })
-        .in('risk_level', ['high', 'very_high']),
+        .eq('risk_level', 'high'),
     ])
 
   return {
@@ -45,49 +45,64 @@ export function useDashboardStats() {
   })
 }
 
-// ─── Onboarding Trend (monthly counts for chart) ────────────────────────────
+// ─── Onboarding Trend (monthly counts split by tier for bar chart) ──────────
 
-interface MonthlyTrendItem {
+export interface OnboardingTrendItem {
   month: string
-  count: number
+  simplified: number
+  regular: number
 }
 
-async function fetchOnboardingTrend(): Promise<MonthlyTrendItem[]> {
-  // Fetch last 12 months of data
+async function fetchOnboardingTrend(): Promise<OnboardingTrendItem[]> {
   const twelveMonthsAgo = new Date()
   twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11)
   twelveMonthsAgo.setDate(1)
 
   const { data, error } = await supabase
     .from('customers')
-    .select('created_at')
+    .select('created_at, kyc_tier')
     .gte('created_at', twelveMonthsAgo.toISOString())
     .order('created_at', { ascending: true })
 
   if (error) throw error
 
-  // Group by month
-  const monthCounts = new Map<string, number>()
-
   // Initialize all 12 months
+  const monthMap = new Map<string, { simplified: number; regular: number }>()
+  const monthLabels: string[] = []
   for (let i = 0; i < 12; i++) {
     const d = new Date()
     d.setMonth(d.getMonth() - (11 - i))
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    monthCounts.set(key, 0)
+    const label = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    monthMap.set(key, { simplified: 0, regular: 0 })
+    monthLabels.push(key)
   }
 
-  // Count per month
+  // Count per month per tier
   for (const row of data ?? []) {
     const d = new Date(row.created_at)
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    monthCounts.set(key, (monthCounts.get(key) ?? 0) + 1)
+    const bucket = monthMap.get(key)
+    if (bucket) {
+      if (row.kyc_tier === 'simplified') {
+        bucket.simplified++
+      } else {
+        bucket.regular++
+      }
+    }
   }
 
-  return Array.from(monthCounts.entries()).map(([month, count]) => ({
-    month,
-    count,
-  }))
+  return monthLabels.map((key) => {
+    const [year, month] = key.split('-')
+    const d = new Date(Number(year), Number(month) - 1)
+    const label = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    const counts = monthMap.get(key)!
+    return {
+      month: label,
+      simplified: counts.simplified,
+      regular: counts.regular,
+    }
+  })
 }
 
 export function useOnboardingTrend() {
@@ -99,26 +114,28 @@ export function useOnboardingTrend() {
 
 // ─── Risk Distribution (for pie chart) ───────────────────────────────────────
 
-interface RiskDistributionItem {
-  risk_level: string
-  count: number
+export interface RiskDistributionItem {
+  name: string
+  value: number
+  fill: string
 }
 
 async function fetchRiskDistribution(): Promise<RiskDistributionItem[]> {
-  const levels: RiskLevel[] = ['low' as RiskLevel, 'medium' as RiskLevel, 'high' as RiskLevel, 'very_high' as RiskLevel]
+  const [regularResult, highResult] = await Promise.all([
+    supabase
+      .from('customers')
+      .select('id', { count: 'exact', head: true })
+      .eq('risk_level', 'regular'),
+    supabase
+      .from('customers')
+      .select('id', { count: 'exact', head: true })
+      .eq('risk_level', 'high'),
+  ])
 
-  const results = await Promise.all(
-    levels.map(async (level) => {
-      const { count } = await supabase
-        .from('customers')
-        .select('id', { count: 'exact', head: true })
-        .eq('risk_level', level)
-
-      return { risk_level: level, count: count ?? 0 }
-    })
-  )
-
-  return results
+  return [
+    { name: 'Regular', value: regularResult.count ?? 0, fill: '#22c55e' },
+    { name: 'High', value: highResult.count ?? 0, fill: '#ef4444' },
+  ]
 }
 
 export function useRiskDistribution() {

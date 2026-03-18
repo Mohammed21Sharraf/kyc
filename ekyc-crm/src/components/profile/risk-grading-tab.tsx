@@ -113,7 +113,7 @@ export function RiskGradingTab({ riskGrading, customerId }: RiskGradingTabProps)
               This customer has not been risk graded yet.
             </p>
           </div>
-          <Button render={<Link href={`/customers/${customerId}/risk-grading`} />}>Grade Now</Button>
+          <Button nativeButton={false} render={<Link href={`/customers/${customerId}/risk-grading`} />}>Grade Now</Button>
         </CardContent>
       </Card>
     );
@@ -139,7 +139,7 @@ export function RiskGradingTab({ riskGrading, customerId }: RiskGradingTabProps)
               <BarChart3 className="size-4" />
               Risk Score Overview
             </CardTitle>
-            <Button variant="outline" size="sm" render={<Link href={`/customers/${customerId}/risk-grading`} />}>Re-grade</Button>
+            <Button nativeButton={false} variant="outline" size="sm" render={<Link href={`/customers/${customerId}/risk-grading`} />}>Re-grade</Button>
           </div>
         </CardHeader>
         <CardContent className="flex justify-center">

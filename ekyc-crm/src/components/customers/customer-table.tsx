@@ -68,20 +68,18 @@ function getStatusBadge(status: string) {
           Completed
         </Badge>
       );
-    case "initiated":
-    case "nid_verified":
-    case "nid_scanned":
-    case "info_collected":
-    case "photo_captured":
-    case "signature_captured":
-    case "screening_done":
-    case "risk_graded":
+    case "nid_verification":
+    case "nid_scan":
+    case "customer_info":
+    case "photograph_capture":
+    case "signature_capture":
+    case "screening_review":
       return (
         <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
           In Progress
         </Badge>
       );
-    case "rejected":
+    case "failed":
       return (
         <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
           Failed
@@ -101,15 +99,13 @@ function getRiskBadge(riskLevel: string | null) {
     );
   }
   switch (riskLevel) {
-    case "low":
-    case "medium":
+    case "regular":
       return (
         <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
           Regular
         </Badge>
       );
     case "high":
-    case "very_high":
       return (
         <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
           High

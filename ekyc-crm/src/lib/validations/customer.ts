@@ -5,7 +5,7 @@ import { z } from 'zod'
 export const nidVerificationSchema = z.object({
   nid_number: z
     .string()
-    .regex(/^\d{17}$/, 'NID number must be exactly 17 digits'),
+    .regex(/^\d{10}$/, 'NID number must be exactly 10 digits'),
   date_of_birth: z
     .string()
     .min(1, 'Date of birth is required'),

@@ -8,11 +8,9 @@ const supabase = createClient()
 
 // ─── Risk level calculation ──────────────────────────────────────────────────
 
-function calculateRiskLevel(totalScore: number): RiskLevel {
-  if (totalScore <= 7) return 'low' as RiskLevel
-  if (totalScore <= 14) return 'medium' as RiskLevel
-  if (totalScore <= 21) return 'high' as RiskLevel
-  return 'very_high' as RiskLevel
+export function calculateRiskLevel(totalScore: number): RiskLevel {
+  // Per BB guidelines: total score < 15 = Regular, >= 15 = High (triggers EDD)
+  return totalScore < 15 ? 'regular' : 'high'
 }
 
 // ─── Fetch risk grading for a customer ───────────────────────────────────────

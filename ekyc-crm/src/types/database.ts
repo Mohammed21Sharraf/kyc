@@ -268,7 +268,7 @@ export interface DashboardStats {
 export interface CustomerFilters {
   search?: string;
   kyc_tier?: KycTier | 'all';
-  onboarding_status?: OnboardingStatus | 'all';
+  onboarding_status?: OnboardingStatus | 'in_progress' | 'all';
   risk_level?: RiskLevel | 'all';
   page?: number;
   pageSize?: number;

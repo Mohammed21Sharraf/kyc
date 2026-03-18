@@ -11,6 +11,16 @@ import type {
 
 const supabase = createClient()
 
+// In-progress statuses (not completed, not failed)
+const IN_PROGRESS_STATUSES = [
+  'nid_verification',
+  'nid_scan',
+  'customer_info',
+  'photograph_capture',
+  'signature_capture',
+  'screening_review',
+]
+
 // ─── Fetch customer list with filters ────────────────────────────────────────
 
 async function fetchCustomers(filters: CustomerFilters) {
@@ -35,7 +45,16 @@ async function fetchCustomers(filters: CustomerFilters) {
   }
 
   if (kyc_tier && kyc_tier !== 'all') query = query.eq('kyc_tier', kyc_tier)
-  if (onboarding_status && onboarding_status !== 'all') query = query.eq('onboarding_status', onboarding_status)
+
+  // Handle "in_progress" as a virtual status filter
+  if (onboarding_status && onboarding_status !== 'all') {
+    if (onboarding_status === 'in_progress') {
+      query = query.in('onboarding_status', IN_PROGRESS_STATUSES)
+    } else {
+      query = query.eq('onboarding_status', onboarding_status)
+    }
+  }
+
   if (risk_level && risk_level !== 'all') query = query.eq('risk_level', risk_level)
 
   const from = (page - 1) * pageSize
